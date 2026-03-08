@@ -13,8 +13,8 @@ graph TD
     C --> D[Autograd Engine]
     C --> E[Storage & Allocator]
     C --> F[JIT Compiler]
-    E --> G[CPU Backend (Rayon)]
-    E --> H[CUDA Backend (Cudarc)]
+    E --> G[CPU Backend - Rayon]
+    E --> H[CUDA Backend - Cudarc]
     E --> I[Metal/Wasm Backends]
 ```
 
