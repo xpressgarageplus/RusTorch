@@ -25,7 +25,7 @@ impl<M: Module> DistributedDataParallel<M> {
         
         let params = self.module.parameters();
         for p in params {
-            if let Some(grad) = p.grad() {
+            if let Some(_grad) = p.grad() {
                 // Mock: average (divide by world_size=1)
                 // Do nothing.
             }
@@ -37,9 +37,8 @@ impl<M: Module> Module for DistributedDataParallel<M> {
     fn forward(&self, input: &Tensor) -> Tensor {
         // Broadcast input (Mock)
         // Forward
-        let output = self.module.forward(input);
         // Reduce output? No, DDP only reduces gradients.
-        output
+        self.module.forward(input)
     }
 
     fn parameters(&self) -> Vec<Tensor> {

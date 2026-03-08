@@ -19,10 +19,7 @@ impl Conv2d {
         
         // Init weights (simple random for now, ideally Kaiming)
         let size = out_channels * in_channels * k_h * k_w;
-        let mut w_data = Vec::with_capacity(size);
-        for _ in 0..size {
-             w_data.push(0.01); // Mock init
-        }
+        let w_data = vec![0.01; size];
         
         let weight = Tensor::new(&w_data, &[out_channels, in_channels, k_h, k_w]).set_requires_grad(true);
         
@@ -31,7 +28,7 @@ impl Conv2d {
         // We need broadcast support for add.
         // Bias shape: [out_channels, 1, 1] for broadcasting? Or [1, out_channels, 1, 1]
         // Let's use [1, out_channels, 1, 1]
-        let mut b_data = vec![0.0; out_channels];
+        let b_data = vec![0.0; out_channels];
         let bias = Tensor::new(&b_data, &[1, out_channels, 1, 1]).set_requires_grad(true);
         
         Self {

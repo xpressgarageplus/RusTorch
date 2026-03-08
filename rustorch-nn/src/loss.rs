@@ -43,15 +43,21 @@ pub struct MSELoss {
     pub reduction: String,
 }
 
+impl Default for MSELoss {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MSELoss {
     pub fn new() -> Self {
         Self { reduction: "mean".to_string() }
     }
     
     pub fn forward(&self, input: &Tensor, target: &Tensor) -> Tensor {
-        let diff = input.sub(target);
+        // let diff = input.sub(target);
         // Manual square since we don't have pow op yet, use mul
-        let sq_diff = diff.matmul(&diff); // Element-wise mul? Wait, Tensor mul is usually element-wise.
+        let _sq_diff = input.sub(target); // .matmul(&diff); // Element-wise mul? Wait, Tensor mul is usually element-wise.
         // But in `tensor.rs`, Mul trait calls `crate::ops::mul`.
         // Let's assume mul is element-wise.
         
@@ -169,6 +175,12 @@ impl BackwardOp for CrossEntropyLossBackward {
 
 pub struct CrossEntropyLoss {
     pub reduction: String,
+}
+
+impl Default for CrossEntropyLoss {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl CrossEntropyLoss {

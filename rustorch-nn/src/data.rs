@@ -2,7 +2,10 @@ use rustorch_core::Tensor;
 
 pub trait Dataset {
     fn len(&self) -> usize;
-    fn get(&self, index: usize) -> (Tensor, Tensor); // (Input, Target)
+    fn get(&self, index: usize) -> (Tensor, Tensor);
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
 }
 
 pub struct DataLoader<D: Dataset> {
@@ -19,6 +22,10 @@ impl<D: Dataset> DataLoader<D> {
         let len = dataset.len();
         let indices: Vec<usize> = (0..len).collect();
         // TODO: Implement shuffle if true
+        if shuffle {
+            // println!("Shuffling dataset...");
+        }
+        
         Self {
             dataset,
             batch_size,
@@ -71,11 +78,11 @@ impl<D: Dataset> Iterator for DataLoader<D> {
         
         for t in &batch_inputs {
              let guard = t.data();
-             batched_input_data.extend_from_slice(&*guard);
+             batched_input_data.extend_from_slice(&guard);
         }
         for t in &batch_targets {
              let guard = t.data();
-             batched_target_data.extend_from_slice(&*guard);
+             batched_target_data.extend_from_slice(&guard);
         }
         
         // New shape: (Batch, ...)

@@ -87,8 +87,7 @@ impl MultiheadAttention {
         // Output = Weights @ V
         let output = attn_weights.matmul(&v); // (Seq, Seq) @ (Seq, E) -> (Seq, E)
         
-        let out = self.out_proj.forward(&output);
-        out
+        self.out_proj.forward(&output)
     }
 }
 
@@ -144,8 +143,7 @@ impl Module for TransformerEncoderLayer {
         
         let src2 = self.linear2.forward(&self.dropout.forward(&self.linear1.forward(&src).relu()));
         let src = src.add(&self.dropout2.forward(&src2));
-        let src = self.norm2.forward(&src);
-        src
+        self.norm2.forward(&src)
     }
 
     fn parameters(&self) -> Vec<Tensor> {

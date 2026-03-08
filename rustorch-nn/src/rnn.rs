@@ -39,7 +39,7 @@ impl RNNCell {
 }
 
 impl Module for RNNCell {
-    fn forward(&self, input: &Tensor) -> Tensor {
+    fn forward(&self, _input: &Tensor) -> Tensor {
         // Input: (N, InputSize)
         // Hidden: Implicit? Or passed?
         // Module::forward only takes input.

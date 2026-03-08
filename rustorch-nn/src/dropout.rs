@@ -25,7 +25,7 @@ impl Module for Dropout {
         // If 1, keep. If 0, drop.
         // Scale by 1/(1-p)
         
-        let mut mask = Tensor::zeros(input.shape());
+        let mask = Tensor::zeros(input.shape());
         mask.uniform_(0.0, 1.0);
         
         let keep_prob = 1.0 - self.p;

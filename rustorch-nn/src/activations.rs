@@ -6,6 +6,12 @@ use serde::{Serialize, Deserialize};
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct ReLU;
 
+impl Default for ReLU {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ReLU {
     pub fn new() -> Self { Self }
 }
