@@ -2,7 +2,9 @@
 members = [
     "rustorch-core",
     "rustorch-nn",
-    "rustorch-cuda", "rustorch-vision", "rustorch-text", "rustorch-metal", "rustorch-wasm",
+    "rustorch-vision", "rustorch-text", "rustorch-wasm",
+    # "rustorch-cuda", # Requires CUDA Toolkit
+    # "rustorch-metal", # Requires macOS
     # "rustorch-vision",
     # "rustorch-text",
     # "rustorch-cuda",
