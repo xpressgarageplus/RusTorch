@@ -40,15 +40,14 @@ Add RusTorch to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-rustorch-core = { git = "https://github.com/Genius-apple/RusTorch" }
-rustorch-nn = { git = "https://github.com/Genius-apple/RusTorch" }
+rus-torch = "0.1.0"
 ```
 
 ### 🔥 Train a Model in 30 Seconds
 
 ```rust
-use rustorch_core::Tensor;
-use rustorch_nn::{Linear, Module, CrossEntropyLoss, SGD};
+use rus_torch::core::Tensor;
+use rus_torch::nn::{Linear, Module, CrossEntropyLoss, SGD};
 
 fn main() {
     // 1. Define a simple model
