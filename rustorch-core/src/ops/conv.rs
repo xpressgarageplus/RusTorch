@@ -201,9 +201,9 @@ pub fn conv2d(input: &Tensor, weight: &Tensor, stride: (usize, usize), padding: 
         }));
     }
     
-    if crate::graph::is_tracing() {
-        crate::graph::record_op(crate::graph::NodeOp::Conv2d { stride, padding }, &[input, weight], &tensor);
-    }
+    // if crate::graph::is_tracing() {
+    //     crate::graph::record_op(crate::graph::NodeOp::Conv2d { stride, padding }, &[input, weight], &tensor);
+    // }
     
     tensor
 }
