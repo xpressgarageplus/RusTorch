@@ -5,6 +5,9 @@ edition = "2021"
 authors = ["Trae AI <trae@example.com>"]
 description = "Computer vision models and utilities for RusTorch"
 license = "MIT OR Apache-2.0"
+repository = "https://github.com/Genius-apple/RusTorch"
+keywords = ["computer-vision", "image-processing", "deep-learning", "rustorch"]
+categories = ["science", "computer-vision"]
 
 [dependencies]
 rustorch-core = { path = "../rustorch-core", version = "0.1.0" }

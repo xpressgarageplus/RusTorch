@@ -5,6 +5,9 @@ edition = "2021"
 authors = ["Trae AI <trae@example.com>"]
 description = "WebAssembly bindings for RusTorch"
 license = "MIT OR Apache-2.0"
+repository = "https://github.com/Genius-apple/RusTorch"
+keywords = ["wasm", "webassembly", "deep-learning", "rustorch"]
+categories = ["wasm"]
 
 [lib]
 crate-type = ["cdylib", "rlib"]
