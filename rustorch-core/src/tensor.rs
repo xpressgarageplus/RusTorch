@@ -351,21 +351,21 @@ impl Add for &Tensor {
 impl Add<Tensor> for Tensor {
     type Output = Tensor;
     fn add(self, rhs: Tensor) -> Tensor {
-        self.add(&rhs)
+        (&self).add(&rhs)
     }
 }
 
 impl Sub<Tensor> for Tensor {
     type Output = Tensor;
     fn sub(self, rhs: Tensor) -> Tensor {
-        self.sub(&rhs)
+        (&self).sub(&rhs)
     }
 }
 
 impl Mul<Tensor> for Tensor {
     type Output = Tensor;
     fn mul(self, rhs: Tensor) -> Tensor {
-        self.mul(&rhs)
+        (&self).mul(&rhs)
     }
 }
 
