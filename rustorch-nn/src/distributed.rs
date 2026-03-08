@@ -1,5 +1,5 @@
-use rustorch_core::Tensor;
 use crate::Module;
+use rustorch_core::Tensor;
 
 pub struct DistributedDataParallel<M: Module> {
     pub module: M,
@@ -15,14 +15,14 @@ impl<M: Module> DistributedDataParallel<M> {
             process_group: None,
         }
     }
-    
+
     pub fn all_reduce_grads(&self) {
         // Placeholder for AllReduce
         // In single process simulation:
         // If we had multiple replicas, we would sum grads.
         // Here, it's a no-op or mock.
         println!("DDP: AllReduce gradients (Mock)");
-        
+
         let params = self.module.parameters();
         for p in params {
             if let Some(_grad) = p.grad() {

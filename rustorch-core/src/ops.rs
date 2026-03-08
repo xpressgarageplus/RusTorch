@@ -1,21 +1,21 @@
-use std::sync::Arc;
-use rayon::prelude::*;
-use crate::Tensor;
 use crate::autograd::BackwardOp;
 use crate::storage::Storage;
+use crate::Tensor;
+use rayon::prelude::*;
+use std::sync::Arc;
 
-pub mod conv;
-pub mod pool;
-pub mod norm;
-pub mod view;
-pub mod embedding;
 pub mod activations;
+pub mod conv;
+pub mod embedding;
+pub mod norm;
+pub mod pool;
+pub mod view;
 
+pub use activations::{sigmoid, softmax, tanh};
 pub use conv::conv2d;
-pub use pool::max_pool2d;
-pub use norm::{batch_norm2d, layer_norm};
 pub use embedding::embedding;
-pub use activations::{sigmoid, tanh, softmax};
+pub use norm::{batch_norm2d, layer_norm};
+pub use pool::max_pool2d;
 pub use view::ReshapeBackward;
 
 #[derive(Debug)]
@@ -39,14 +39,14 @@ impl BackwardOp for MulBackward {
             // But `mul` will check `requires_grad`.
             // We should use a `mul_no_grad` or similar if we want to stop tracking.
             // But `grad` tensor usually has requires_grad=false unless created with it.
-            
+
             // However, self.rhs might have requires_grad=true.
             // So grad.mul(&self.rhs) will produce a tensor with requires_grad=true!
             // This means we are building the graph for double backward. This is good!
             // But we need to be careful about infinite recursion if not careful.
             // Here it's fine.
-            
-            let grad_lhs = crate::ops::mul(grad, &self.rhs); 
+
+            let grad_lhs = crate::ops::mul(grad, &self.rhs);
             self.lhs.accumulate_grad(&grad_lhs);
             self.lhs.backward_step();
         }
@@ -62,22 +62,27 @@ pub fn mul(lhs: &Tensor, rhs: &Tensor) -> Tensor {
     // 1. Check shapes & Broadcast (Simplified: assume same shape for now)
     if lhs.shape() != rhs.shape() {
         // TODO: Broadcast
-        panic!("Mul: shapes mismatch {:?} vs {:?}", lhs.shape(), rhs.shape());
+        panic!(
+            "Mul: shapes mismatch {:?} vs {:?}",
+            lhs.shape(),
+            rhs.shape()
+        );
     }
 
     let lhs_guard = lhs.data();
     let rhs_guard = rhs.data();
     let lhs_data = &*lhs_guard;
     let rhs_data = &*rhs_guard;
-    
-    let result_data: Vec<f32> = lhs_data.par_iter()
+
+    let result_data: Vec<f32> = lhs_data
+        .par_iter()
         .zip(rhs_data.par_iter())
         .map(|(a, b)| a * b)
         .collect();
-        
+
     let storage = Storage::new(result_data);
     let mut tensor = Tensor::new_with_storage(storage, lhs.shape());
-    
+
     if lhs.requires_grad() || rhs.requires_grad() {
         tensor.set_requires_grad_mut(true);
         tensor.set_op(Arc::new(MulBackward {
@@ -85,7 +90,7 @@ pub fn mul(lhs: &Tensor, rhs: &Tensor) -> Tensor {
             rhs: rhs.clone(),
         }));
     }
-    
+
     tensor
 }
 
@@ -121,7 +126,8 @@ pub fn add(lhs: &Tensor, rhs: &Tensor) -> Tensor {
         let rhs_guard = rhs.data();
         let lhs_data = &*lhs_guard;
         let rhs_data = &*rhs_guard;
-        let result_data: Vec<f32> = lhs_data.par_iter()
+        let result_data: Vec<f32> = lhs_data
+            .par_iter()
             .zip(rhs_data.par_iter())
             .map(|(a, b)| a + b)
             .collect();
@@ -140,23 +146,24 @@ pub fn add(lhs: &Tensor, rhs: &Tensor) -> Tensor {
     // Broadcast
     let target_shape = crate::broadcast::broadcast_shapes(lhs.shape(), rhs.shape())
         .expect("Shapes not broadcastable");
-    
+
     let lhs_expanded = lhs.expand(&target_shape);
     let rhs_expanded = rhs.expand(&target_shape);
-    
+
     let lhs_guard = lhs_expanded.data();
     let rhs_guard = rhs_expanded.data();
     let lhs_data = &*lhs_guard;
     let rhs_data = &*rhs_guard;
-    
-    let result_data: Vec<f32> = lhs_data.par_iter()
+
+    let result_data: Vec<f32> = lhs_data
+        .par_iter()
         .zip(rhs_data.par_iter())
         .map(|(a, b)| a + b)
         .collect();
-    
+
     let storage = Storage::new(result_data);
     let mut tensor = Tensor::new_with_storage(storage, &target_shape);
-    
+
     if lhs.requires_grad() || rhs.requires_grad() {
         tensor.set_requires_grad_mut(true);
         tensor.set_op(Arc::new(AddBackward {
@@ -164,30 +171,34 @@ pub fn add(lhs: &Tensor, rhs: &Tensor) -> Tensor {
             rhs: rhs.clone(),
         }));
     }
-    
+
     tensor
 }
 
 pub fn sub(lhs: &Tensor, rhs: &Tensor) -> Tensor {
     // Simplified: Assume same shape
     if lhs.shape() != rhs.shape() {
-         panic!("Sub shape mismatch");
+        panic!("Sub shape mismatch");
     }
-    
+
     let lhs_guard = lhs.data();
     let rhs_guard = rhs.data();
     let lhs_data = &*lhs_guard;
     let rhs_data = &*rhs_guard;
-    
-    let result_data: Vec<f32> = lhs_data.par_iter().zip(rhs_data.par_iter()).map(|(a, b)| a - b).collect();
+
+    let result_data: Vec<f32> = lhs_data
+        .par_iter()
+        .zip(rhs_data.par_iter())
+        .map(|(a, b)| a - b)
+        .collect();
     let storage = Storage::new(result_data);
     let mut tensor = Tensor::new_with_storage(storage, lhs.shape());
-    
+
     if lhs.requires_grad() || rhs.requires_grad() {
         tensor.set_requires_grad_mut(true);
         // TODO: SubBackward
     }
-    
+
     tensor
 }
 
@@ -198,7 +209,7 @@ pub fn neg(input: &Tensor) -> Tensor {
     let result_data: Vec<f32> = input_data.par_iter().map(|x| -x).collect();
     let storage = Storage::new(result_data);
     let mut tensor = Tensor::new_with_storage(storage, input.shape());
-    
+
     if input.requires_grad() {
         tensor.set_requires_grad_mut(true);
         // NegBackward is just -grad
@@ -213,7 +224,7 @@ pub fn relu(input: &Tensor) -> Tensor {
     let result_data: Vec<f32> = input_data.par_iter().map(|x| x.max(0.0)).collect();
     let storage = Storage::new(result_data);
     let mut tensor = Tensor::new_with_storage(storage, input.shape());
-    
+
     if input.requires_grad() {
         tensor.set_requires_grad_mut(true);
         // ReluBackward

@@ -1,7 +1,7 @@
-use rustorch_core::Tensor;
 use crate::Module;
+use rustorch_core::Tensor;
 #[cfg(feature = "serde")]
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Conv2d {
@@ -12,17 +12,24 @@ pub struct Conv2d {
 }
 
 impl Conv2d {
-    pub fn new(in_channels: usize, out_channels: usize, kernel_size: (usize, usize), stride: (usize, usize), padding: (usize, usize)) -> Self {
+    pub fn new(
+        in_channels: usize,
+        out_channels: usize,
+        kernel_size: (usize, usize),
+        stride: (usize, usize),
+        padding: (usize, usize),
+    ) -> Self {
         // Weight: (Out, In, kH, kW)
         let k_h = kernel_size.0;
         let k_w = kernel_size.1;
-        
+
         // Init weights (simple random for now, ideally Kaiming)
         let size = out_channels * in_channels * k_h * k_w;
         let w_data = vec![0.01; size];
-        
-        let weight = Tensor::new(&w_data, &[out_channels, in_channels, k_h, k_w]).set_requires_grad(true);
-        
+
+        let weight =
+            Tensor::new(&w_data, &[out_channels, in_channels, k_h, k_w]).set_requires_grad(true);
+
         // Init bias
         // Bias: (Out) -> usually broadcasted to (N, Out, H, W)
         // We need broadcast support for add.
@@ -30,7 +37,7 @@ impl Conv2d {
         // Let's use [1, out_channels, 1, 1]
         let b_data = vec![0.0; out_channels];
         let bias = Tensor::new(&b_data, &[1, out_channels, 1, 1]).set_requires_grad(true);
-        
+
         Self {
             weight,
             bias: Some(bias),
@@ -43,14 +50,14 @@ impl Conv2d {
 impl Module for Conv2d {
     fn forward(&self, input: &Tensor) -> Tensor {
         let output = input.conv2d(&self.weight, self.stride, self.padding);
-        
+
         if let Some(bias) = &self.bias {
             // output is (N, C_out, H, W)
             // bias is (1, C_out, 1, 1)
             // Broadcasting should handle this.
             return output.add(bias);
         }
-        
+
         output
     }
 

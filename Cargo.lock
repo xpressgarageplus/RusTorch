@@ -418,21 +418,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rustorch-cuda"
-version = "0.1.0"
-dependencies = [
- "cudarc",
- "thiserror",
-]
-
-[[package]]
-name = "rustorch-metal"
-version = "0.1.0"
-dependencies = [
- "rustorch-core",
-]
-
-[[package]]
 name = "rustorch-nn"
 version = "0.1.0"
 dependencies = [

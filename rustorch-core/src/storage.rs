@@ -1,5 +1,5 @@
-use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
 use std::fmt;
+use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 #[cfg(feature = "cuda")]
 use cudarc::driver::CudaSlice;
@@ -34,7 +34,7 @@ impl Storage {
             device: Device::Cpu,
         }
     }
-    
+
     #[cfg(feature = "cuda")]
     pub fn new_cuda(data: CudaSlice<f32>, device_id: usize) -> Self {
         Self {
@@ -42,7 +42,7 @@ impl Storage {
             device: Device::Cuda(device_id),
         }
     }
-    
+
     pub fn from_slice(data: &[f32]) -> Self {
         Self::new(data.to_vec())
     }
@@ -50,7 +50,7 @@ impl Storage {
     pub fn zeros(size: usize) -> Self {
         Self::new(vec![0.0; size])
     }
-    
+
     pub fn data(&self) -> RwLockReadGuard<'_, Vec<f32>> {
         match &self.inner {
             StorageImpl::Cpu(data) => data.read().expect("Lock poisoned"),
@@ -83,16 +83,16 @@ impl Storage {
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
-    
+
     pub fn device(&self) -> Device {
         self.device
     }
-    
+
     pub fn to_device(&self, device: Device) -> Self {
         if self.device == device {
             return self.clone();
         }
-        
+
         match (self.device, device) {
             (Device::Cpu, Device::Cuda(_id)) => {
                 // Implement CPU -> CUDA transfer
@@ -105,18 +105,22 @@ impl Storage {
                 }
                 #[cfg(not(feature = "cuda"))]
                 panic!("CUDA feature not enabled")
-            },
+            }
             (Device::Cuda(_), Device::Cpu) => {
                 // Implement CUDA -> CPU transfer
                 #[cfg(feature = "cuda")]
                 {
-                     // Read from GPU
-                     todo!("Implement CUDA -> CPU transfer")
+                    // Read from GPU
+                    todo!("Implement CUDA -> CPU transfer")
                 }
                 #[cfg(not(feature = "cuda"))]
                 panic!("CUDA feature not enabled")
-            },
-            _ => todo!("Transfer between {:?} and {:?} not implemented", self.device, device),
+            }
+            _ => todo!(
+                "Transfer between {:?} and {:?} not implemented",
+                self.device,
+                device
+            ),
         }
     }
 }
@@ -127,14 +131,14 @@ impl fmt::Debug for Storage {
             StorageImpl::Cpu(data) => {
                 let guard = data.read().unwrap();
                 write!(f, "Storage({:?}, size={})", self.device, guard.len())
-            },
+            }
             #[cfg(feature = "cuda")]
             StorageImpl::Cuda(data) => {
                 write!(f, "CudaStorage({:?}, size={})", self.device, data.len())
-            },
+            }
             #[cfg(not(feature = "cuda"))]
             StorageImpl::CudaStub => {
-                 write!(f, "CudaStorageStub({:?})", self.device)
+                write!(f, "CudaStorageStub({:?})", self.device)
             }
         }
     }

@@ -1,9 +1,9 @@
-use wasm_bindgen::prelude::*;
 use rustorch_core::Tensor;
+use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 pub struct JsTensor {
-    inner: Tensor
+    inner: Tensor,
 }
 
 #[wasm_bindgen]
@@ -11,13 +11,13 @@ impl JsTensor {
     #[wasm_bindgen(constructor)]
     pub fn new(val: f32) -> Self {
         JsTensor {
-            inner: Tensor::new(&[val], &[1])
+            inner: Tensor::new(&[val], &[1]),
         }
     }
-    
+
     pub fn add(&self, other: &JsTensor) -> JsTensor {
         JsTensor {
-            inner: &self.inner + &other.inner
+            inner: &self.inner + &other.inner,
         }
     }
 }

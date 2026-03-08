@@ -1,7 +1,7 @@
-use rustorch_core::Tensor;
 use crate::Module;
+use rustorch_core::Tensor;
 #[cfg(feature = "serde")]
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct LayerNorm {
@@ -17,7 +17,7 @@ impl LayerNorm {
         // Default affine=true
         let weight = Tensor::ones(&normalized_shape).set_requires_grad(true);
         let bias = Tensor::zeros(&normalized_shape).set_requires_grad(true);
-        
+
         Self {
             normalized_shape,
             eps: 1e-5,
@@ -34,7 +34,7 @@ impl Module for LayerNorm {
             &self.normalized_shape,
             self.weight.as_ref(),
             self.bias.as_ref(),
-            self.eps
+            self.eps,
         )
     }
 
@@ -57,10 +57,10 @@ pub struct BatchNorm2d {
     pub momentum: f32,
     pub affine: bool,
     pub track_running_stats: bool,
-    
+
     pub weight: Option<Tensor>, // gamma
     pub bias: Option<Tensor>,   // beta
-    
+
     pub running_mean: Tensor,
     pub running_var: Tensor,
 }
@@ -70,11 +70,11 @@ impl BatchNorm2d {
         // Default init
         let weight = Tensor::ones(&[num_features]).set_requires_grad(true);
         let bias = Tensor::zeros(&[num_features]).set_requires_grad(true);
-        
+
         // Running stats: no grad
         let running_mean = Tensor::zeros(&[num_features]);
         let running_var = Tensor::ones(&[num_features]);
-        
+
         Self {
             num_features,
             eps: 1e-5,
@@ -92,8 +92,8 @@ impl BatchNorm2d {
 impl Module for BatchNorm2d {
     fn forward(&self, input: &Tensor) -> Tensor {
         // Determine training mode (TODO: Add train/eval mode to Module trait or Context)
-        let training = true; 
-        
+        let training = true;
+
         input.batch_norm2d(
             self.weight.as_ref(),
             self.bias.as_ref(),
@@ -101,7 +101,7 @@ impl Module for BatchNorm2d {
             &self.running_var,
             training,
             self.momentum,
-            self.eps
+            self.eps,
         )
     }
 

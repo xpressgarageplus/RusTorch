@@ -26,7 +26,7 @@ impl<D: Dataset> DataLoader<D> {
         if shuffle {
             // println!("Shuffling dataset...");
         }
-        
+
         Self {
             dataset,
             batch_size,
@@ -72,35 +72,35 @@ impl<D: Dataset> Iterator for DataLoader<D> {
         }
         let input_shape = batch_inputs[0].shape();
         let target_shape = batch_targets[0].shape();
-        
+
         // Flatten data
         let mut batched_input_data = Vec::new();
         let mut batched_target_data = Vec::new();
-        
+
         for t in &batch_inputs {
-             let guard = t.data();
-             batched_input_data.extend_from_slice(&guard);
+            let guard = t.data();
+            batched_input_data.extend_from_slice(&guard);
         }
         for t in &batch_targets {
-             let guard = t.data();
-             batched_target_data.extend_from_slice(&guard);
+            let guard = t.data();
+            batched_target_data.extend_from_slice(&guard);
         }
-        
+
         // New shape: (Batch, ...)
         let mut new_input_shape = vec![batch_inputs.len()];
         new_input_shape.extend_from_slice(input_shape);
-        
+
         // Target shape logic: if target is scalar (size 1, shape [1] or []), batch shape should be [Batch] or [Batch, 1]
         // If target is already Tensor(shape=[1]), new shape is [Batch, 1].
         // If target is scalar, shape might be [].
         // Let's assume target is always at least [1] or [C].
-        
+
         let mut new_target_shape = vec![batch_targets.len()];
         new_target_shape.extend_from_slice(target_shape);
-        
+
         let input_tensor = Tensor::new(&batched_input_data, &new_input_shape);
         let target_tensor = Tensor::new(&batched_target_data, &new_target_shape);
-        
+
         Some((input_tensor, target_tensor))
     }
 }

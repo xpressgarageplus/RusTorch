@@ -11,45 +11,45 @@ fn main() {
         relu: ReLU,
         conv2: Conv2d,
     }
-    
+
     impl Module for MyModel {
         fn forward(&self, input: &Tensor) -> Tensor {
             let x = self.conv1.forward(input);
             let x = self.relu.forward(&x);
             self.conv2.forward(&x)
         }
-        
+
         fn parameters(&self) -> Vec<Tensor> {
             vec![]
         }
     }
-    
+
     let model = MyModel {
         conv1: Conv2d::new(1, 4, (3, 3), (1, 1), (1, 1)),
         relu: ReLU::new(),
         conv2: Conv2d::new(4, 2, (3, 3), (1, 1), (1, 1)),
     };
-    
+
     // Input
     let input = Tensor::new(&vec![1.0; 1*1*8*8], &[1, 1, 8, 8]);
-    
+
     println!("Starting tracing...");
     start_tracing();
-    
+
     // Register inputs
     register_input(&input, "input".to_string());
-    
+
     // Run forward
     let output = model.forward(&input);
-    
+
     println!("Forward done. Output shape: {:?}", output.shape());
-    
+
     // Stop tracing
     let graph = stop_tracing().expect("Tracing failed");
-    
+
     // Print graph
     graph.print();
-    
+
     // Simple optimization pass: Find Conv2d followed by ReLU
     println!("\n--- Optimization Pass: Fuse Conv+ReLU ---");
     for node in &graph.nodes {

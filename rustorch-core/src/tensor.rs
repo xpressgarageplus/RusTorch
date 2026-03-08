@@ -1,15 +1,15 @@
-use std::sync::{Arc, Mutex, RwLockReadGuard, RwLockWriteGuard};
 use std::fmt;
 use std::ops::{Add, Mul, Sub};
+use std::sync::{Arc, Mutex, RwLockReadGuard, RwLockWriteGuard};
 // use rand::Rng;
-use rand_distr::{Normal, Uniform, Distribution};
+use rand_distr::{Distribution, Normal, Uniform};
 // use rayon::prelude::*;
 // use rayon::iter::{IntoParallelRefIterator, ParallelIterator, IndexedParallelIterator};
 // use rayon::slice::ParallelSliceMut;
-#[cfg(feature = "serde")]
-use serde::{Serialize, Deserialize, Serializer, Deserializer};
-use crate::storage::Storage;
 use crate::autograd::BackwardOp;
+use crate::storage::Storage;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 #[derive(Clone, Debug)]
 pub struct Tensor {
@@ -37,12 +37,17 @@ impl Tensor {
     pub fn new(data: &[f32], shape: &[usize]) -> Self {
         let size: usize = shape.iter().product();
         if data.len() != size {
-             panic!("Data size {} does not match shape {:?} (expected {})", data.len(), shape, size);
+            panic!(
+                "Data size {} does not match shape {:?} (expected {})",
+                data.len(),
+                shape,
+                size
+            );
         }
-        
+
         let strides = Self::compute_strides(shape);
         let storage = Storage::from_slice(data);
-        
+
         Self {
             inner: Arc::new(TensorImpl {
                 storage,
@@ -70,7 +75,7 @@ impl Tensor {
             }),
         }
     }
-    
+
     pub fn zeros(shape: &[usize]) -> Self {
         let size: usize = shape.iter().product();
         Self::new(&vec![0.0; size], shape)
@@ -87,7 +92,7 @@ impl Tensor {
         let size: usize = shape.iter().product();
         Self::new(&vec![1.0; size], shape)
     }
-    
+
     pub fn set_requires_grad(self, requires_grad: bool) -> Self {
         let inner = &self.inner;
         let new_impl = TensorImpl {
@@ -99,7 +104,9 @@ impl Tensor {
             op: inner.op.clone(),
             is_leaf: inner.is_leaf,
         };
-        Self { inner: Arc::new(new_impl) }
+        Self {
+            inner: Arc::new(new_impl),
+        }
     }
 
     pub fn set_requires_grad_mut(&mut self, requires_grad: bool) {
@@ -126,7 +133,7 @@ impl Tensor {
     pub fn data_mut(&self) -> RwLockWriteGuard<'_, Vec<f32>> {
         self.inner.storage.data_mut()
     }
-    
+
     pub fn grad(&self) -> Option<Tensor> {
         self.inner.grad.lock().unwrap().clone()
     }
@@ -155,7 +162,7 @@ impl Tensor {
             // If tensor is not scalar, we should probably fill ones.
             // But for simplicity, let's assume scalar 1.0 or Tensor::ones.
         }
-        
+
         let grad = Tensor::ones(self.shape());
         self.accumulate_grad(&grad);
         self.backward_step();
@@ -163,26 +170,26 @@ impl Tensor {
 
     pub fn backward_step(&self) {
         // Topological sort is better, but recursive DFS works for DAG.
-        // We need to avoid visiting same node multiple times? 
+        // We need to avoid visiting same node multiple times?
         // PyTorch uses Engine. Here we do simple recursive DFS.
         // Problem: Double counting if diamond shape.
         // Standard approach: Queue based topological sort.
         // For this task, keep existing recursive implementation if it exists, or implement simple one.
-        
+
         if let Some(op) = &self.inner.op {
             let grad = self.grad().unwrap();
             op.backward(&grad);
         }
     }
-    
+
     pub fn set_op(&mut self, op: Arc<dyn BackwardOp>) {
         if let Some(inner) = Arc::get_mut(&mut self.inner) {
             inner.op = Some(op);
         } else {
-            // Panic or clone? 
+            // Panic or clone?
             // Usually set_op is called during construction where we have unique ownership.
             // If not, it means something is wrong.
-            // But `permute` cloned `inner`... 
+            // But `permute` cloned `inner`...
             // In `permute`, I created a new Tensor with `inner: Arc::new(...)`.
             // So `self.inner` is unique there.
             panic!("Cannot set op on shared tensor storage wrapper");
@@ -197,7 +204,7 @@ impl Tensor {
         // Or better:
         panic!("Matmul not fully implemented yet");
     }
-    
+
     pub fn t(&self) -> Tensor {
         crate::ops::view::transpose(self, 0, 1) // Default to 2D transpose
     }
@@ -230,11 +237,21 @@ impl Tensor {
         crate::ops::softmax(self, dim)
     }
 
-    pub fn conv2d(&self, weight: &Tensor, stride: (usize, usize), padding: (usize, usize)) -> Tensor {
+    pub fn conv2d(
+        &self,
+        weight: &Tensor,
+        stride: (usize, usize),
+        padding: (usize, usize),
+    ) -> Tensor {
         crate::ops::conv2d(self, weight, stride, padding)
     }
 
-    pub fn max_pool2d(&self, kernel_size: (usize, usize), stride: (usize, usize), padding: (usize, usize)) -> Tensor {
+    pub fn max_pool2d(
+        &self,
+        kernel_size: (usize, usize),
+        stride: (usize, usize),
+        padding: (usize, usize),
+    ) -> Tensor {
         crate::ops::max_pool2d(self, kernel_size, stride, padding)
     }
 
@@ -247,9 +264,18 @@ impl Tensor {
         running_var: &Tensor,
         training: bool,
         momentum: f32,
-        eps: f32
+        eps: f32,
     ) -> Tensor {
-        crate::ops::batch_norm2d(self, gamma, beta, running_mean, running_var, training, momentum, eps)
+        crate::ops::batch_norm2d(
+            self,
+            gamma,
+            beta,
+            running_mean,
+            running_var,
+            training,
+            momentum,
+            eps,
+        )
     }
 
     pub fn layer_norm(
@@ -257,7 +283,7 @@ impl Tensor {
         normalized_shape: &[usize],
         weight: Option<&Tensor>,
         bias: Option<&Tensor>,
-        eps: f32
+        eps: f32,
     ) -> Tensor {
         crate::ops::layer_norm(self, normalized_shape, weight, bias, eps)
     }
@@ -312,12 +338,16 @@ impl Tensor {
         let size: usize = self.shape().iter().product();
         let new_size: usize = new_shape.iter().product();
         if size != new_size {
-            panic!("Reshape: element count mismatch: {:?} vs {:?}", self.shape(), new_shape);
+            panic!(
+                "Reshape: element count mismatch: {:?} vs {:?}",
+                self.shape(),
+                new_shape
+            );
         }
-        
+
         let inner = &self.inner;
         let strides = Self::compute_strides(new_shape);
-        
+
         // Share storage, create new TensorImpl
         let mut tensor = Self {
             inner: Arc::new(TensorImpl {
@@ -330,17 +360,17 @@ impl Tensor {
                 is_leaf: false,
             }),
         };
-        
+
         if inner.requires_grad {
             tensor.set_op(Arc::new(crate::ops::ReshapeBackward {
                 input_shape: inner.shape.clone(),
                 input: self.clone(),
             }));
         }
-        
+
         tensor
     }
-    
+
     pub fn mul(&self, rhs: &Tensor) -> Tensor {
         crate::ops::mul(self, rhs)
     }
@@ -354,11 +384,11 @@ impl Tensor {
         }
         strides
     }
-    
+
     // pub fn expand(&self, target_shape: &[usize]) -> Tensor {
     //    crate::broadcast::expand(self, target_shape)
     // }
-    
+
     pub fn copy_from_slice(&self, src: &[f32]) {
         let mut guard = self.data_mut();
         let len = std::cmp::min(guard.len(), src.len());
@@ -450,6 +480,11 @@ impl fmt::Display for Tensor {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let data = self.data();
         let len = std::cmp::min(data.len(), 10);
-        write!(f, "Tensor(shape={:?}, data={:?})", self.shape(), &data[..len])
+        write!(
+            f,
+            "Tensor(shape={:?}, data={:?})",
+            self.shape(),
+            &data[..len]
+        )
     }
 }

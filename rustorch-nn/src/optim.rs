@@ -36,22 +36,26 @@ impl Optimizer for SGD {
             if !param.requires_grad() {
                 continue;
             }
-            
+
             let grad_opt = param.grad();
             if let Some(grad) = grad_opt {
                 let mut param_data = param.data_mut();
                 let grad_data = grad.data();
-                
+
                 if self.momentum != 0.0 {
                     // Initialize velocity if needed
                     if self.velocities[i].is_none() {
                         self.velocities[i] = Some(Tensor::zeros(param.shape()));
                     }
-                    
+
                     let velocity_tensor = self.velocities[i].as_ref().unwrap();
                     let mut velocity_data = velocity_tensor.data_mut();
-                    
-                    for ((p, g), v) in param_data.iter_mut().zip(grad_data.iter()).zip(velocity_data.iter_mut()) {
+
+                    for ((p, g), v) in param_data
+                        .iter_mut()
+                        .zip(grad_data.iter())
+                        .zip(velocity_data.iter_mut())
+                    {
                         *v = self.momentum * *v + *g;
                         *p -= self.lr * *v;
                     }
@@ -124,7 +128,7 @@ impl Optimizer for Adam {
 
                 let m_tensor = self.exp_avg[i].as_ref().unwrap();
                 let v_tensor = self.exp_avg_sq[i].as_ref().unwrap();
-                
+
                 let mut m_data = m_tensor.data_mut();
                 let mut v_data = v_tensor.data_mut();
 
@@ -133,15 +137,17 @@ impl Optimizer for Adam {
                 let bias_correction1 = 1.0 - beta1_pow;
                 let bias_correction2 = 1.0 - beta2_pow;
 
-                for ((p, g), (m, v)) in param_data.iter_mut().zip(grad_data.iter())
-                    .zip(m_data.iter_mut().zip(v_data.iter_mut())) 
+                for ((p, g), (m, v)) in param_data
+                    .iter_mut()
+                    .zip(grad_data.iter())
+                    .zip(m_data.iter_mut().zip(v_data.iter_mut()))
                 {
                     *m = self.beta1 * *m + one_minus_beta1 * *g;
                     *v = self.beta2 * *v + one_minus_beta2 * *g * *g;
 
                     let m_hat = *m / bias_correction1;
                     let v_hat = *v / bias_correction2;
-                    
+
                     *p -= self.lr * m_hat / (v_hat.sqrt() + self.epsilon);
                 }
             }

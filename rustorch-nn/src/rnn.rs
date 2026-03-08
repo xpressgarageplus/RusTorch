@@ -1,7 +1,7 @@
+use crate::{Linear, Module};
 use rustorch_core::Tensor;
-use crate::{Module, Linear};
 #[cfg(feature = "serde")]
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 // --- RNN Cell ---
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -10,7 +10,7 @@ pub struct RNNCell {
     pub hidden_size: usize,
     pub bias: bool,
     pub nonlinearity: String, // "tanh" or "relu"
-    
+
     pub weight_ih: Linear,
     pub weight_hh: Linear,
 }
@@ -22,11 +22,11 @@ impl RNNCell {
         // My Linear: y = x @ W.t() + b
         // weight_ih: in -> hidden
         // weight_hh: hidden -> hidden
-        
+
         // Note: PyTorch merges biases usually.
         let weight_ih = Linear::new(input_size, hidden_size); // Check Linear signature: (in, out)
         let weight_hh = Linear::new(hidden_size, hidden_size);
-        
+
         Self {
             input_size,
             hidden_size,
@@ -49,12 +49,12 @@ impl Module for RNNCell {
         // Limitation of our current trait.
         // Workaround: input can be packed? Or we just assume h_0 is 0 if not provided?
         // Or we extend trait?
-        // Let's stick to trait for now and maybe panic if state handling is needed, 
+        // Let's stick to trait for now and maybe panic if state handling is needed,
         // or just assume input contains hidden state (concatenated)?
         // Or better: RNNCell usually managed by RNN container.
         // Let's just implement the logic assuming input is tuple (x, h) packed?
         // No, Tensor cannot pack tuples easily without "List" type.
-        // For simplicity in this demo framework: 
+        // For simplicity in this demo framework:
         // We will change Module trait? No, too invasive.
         // We will assume `input` is just X, and H is stored internally? (Stateful RNN)
         // Or we just implement `forward_with_state` inherent method.
@@ -75,12 +75,12 @@ impl RNNCell {
         } else {
             Tensor::zeros(&[input.shape()[0], self.hidden_size])
         };
-        
+
         let ih = self.weight_ih.forward(input);
         let hh = self.weight_hh.forward(&h_prev);
-        
+
         let pre_act = ih + hh; // Add
-        
+
         if self.nonlinearity == "relu" {
             pre_act.relu()
         } else {
@@ -99,10 +99,14 @@ pub struct LSTMCell {
     pub input_size: usize,
     pub hidden_size: usize,
     // Use separate weights for simplicity until Split op is available
-    pub w_ii: Linear, pub w_hi: Linear, // Input gate
-    pub w_if: Linear, pub w_hf: Linear, // Forget gate
-    pub w_ig: Linear, pub w_hg: Linear, // Cell gate
-    pub w_io: Linear, pub w_ho: Linear, // Output gate
+    pub w_ii: Linear,
+    pub w_hi: Linear, // Input gate
+    pub w_if: Linear,
+    pub w_hf: Linear, // Forget gate
+    pub w_ig: Linear,
+    pub w_hg: Linear, // Cell gate
+    pub w_io: Linear,
+    pub w_ho: Linear, // Output gate
 }
 
 impl LSTMCell {
@@ -110,39 +114,50 @@ impl LSTMCell {
         Self {
             input_size,
             hidden_size,
-            w_ii: Linear::new(input_size, hidden_size), w_hi: Linear::new(hidden_size, hidden_size),
-            w_if: Linear::new(input_size, hidden_size), w_hf: Linear::new(hidden_size, hidden_size),
-            w_ig: Linear::new(input_size, hidden_size), w_hg: Linear::new(hidden_size, hidden_size),
-            w_io: Linear::new(input_size, hidden_size), w_ho: Linear::new(hidden_size, hidden_size),
+            w_ii: Linear::new(input_size, hidden_size),
+            w_hi: Linear::new(hidden_size, hidden_size),
+            w_if: Linear::new(input_size, hidden_size),
+            w_hf: Linear::new(hidden_size, hidden_size),
+            w_ig: Linear::new(input_size, hidden_size),
+            w_hg: Linear::new(hidden_size, hidden_size),
+            w_io: Linear::new(input_size, hidden_size),
+            w_ho: Linear::new(hidden_size, hidden_size),
         }
     }
-    
-    pub fn forward_with_state(&self, input: &Tensor, hx: Option<(&Tensor, &Tensor)>) -> (Tensor, Tensor) {
+
+    pub fn forward_with_state(
+        &self,
+        input: &Tensor,
+        hx: Option<(&Tensor, &Tensor)>,
+    ) -> (Tensor, Tensor) {
         let (h_prev, c_prev) = if let Some((h, c)) = hx {
             (h.clone(), c.clone())
         } else {
             let batch_size = input.shape()[0];
-            (Tensor::zeros(&[batch_size, self.hidden_size]), Tensor::zeros(&[batch_size, self.hidden_size]))
+            (
+                Tensor::zeros(&[batch_size, self.hidden_size]),
+                Tensor::zeros(&[batch_size, self.hidden_size]),
+            )
         };
-        
+
         // Input Gate
         let i = (self.w_ii.forward(input) + self.w_hi.forward(&h_prev)).sigmoid();
-        
+
         // Forget Gate
         let f = (self.w_if.forward(input) + self.w_hf.forward(&h_prev)).sigmoid();
-        
+
         // Cell Gate (Candidate)
         let g = (self.w_ig.forward(input) + self.w_hg.forward(&h_prev)).tanh();
-        
+
         // Output Gate
         let o = (self.w_io.forward(input) + self.w_ho.forward(&h_prev)).sigmoid();
-        
+
         // Cell State
         let c_next = f.mul(&c_prev) + i.mul(&g);
-        
+
         // Hidden State
         let h_next = o.mul(&c_next.tanh());
-        
+
         (h_next, c_next)
     }
 }
@@ -153,10 +168,14 @@ impl Module for LSTMCell {
     }
     fn parameters(&self) -> Vec<Tensor> {
         let mut p = Vec::new();
-        p.extend(self.w_ii.parameters()); p.extend(self.w_hi.parameters());
-        p.extend(self.w_if.parameters()); p.extend(self.w_hf.parameters());
-        p.extend(self.w_ig.parameters()); p.extend(self.w_hg.parameters());
-        p.extend(self.w_io.parameters()); p.extend(self.w_ho.parameters());
+        p.extend(self.w_ii.parameters());
+        p.extend(self.w_hi.parameters());
+        p.extend(self.w_if.parameters());
+        p.extend(self.w_hf.parameters());
+        p.extend(self.w_ig.parameters());
+        p.extend(self.w_hg.parameters());
+        p.extend(self.w_io.parameters());
+        p.extend(self.w_ho.parameters());
         p
     }
 }
@@ -170,8 +189,12 @@ pub struct GRUCell {
 }
 
 impl Module for GRUCell {
-    fn forward(&self, input: &Tensor) -> Tensor { input.clone() }
-    fn parameters(&self) -> Vec<Tensor> { vec![] }
+    fn forward(&self, input: &Tensor) -> Tensor {
+        input.clone()
+    }
+    fn parameters(&self) -> Vec<Tensor> {
+        vec![]
+    }
 }
 
 // --- RNN Container ---
@@ -196,7 +219,7 @@ impl Module for RNN {
         // Skeleton.
         input.clone()
     }
-    
+
     fn parameters(&self) -> Vec<Tensor> {
         self.cell.parameters()
     }

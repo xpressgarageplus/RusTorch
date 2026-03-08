@@ -1,7 +1,7 @@
+use crate::{Dropout, LayerNorm, Linear, Module};
 use rustorch_core::Tensor;
-use crate::{Module, Linear, LayerNorm, Dropout};
 #[cfg(feature = "serde")]
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 // --- Multihead Attention ---
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -9,7 +9,7 @@ pub struct MultiheadAttention {
     pub embed_dim: usize,
     pub num_heads: usize,
     pub head_dim: usize,
-    
+
     pub q_proj: Linear,
     pub k_proj: Linear,
     pub v_proj: Linear,
@@ -18,9 +18,13 @@ pub struct MultiheadAttention {
 
 impl MultiheadAttention {
     pub fn new(embed_dim: usize, num_heads: usize) -> Self {
-        assert_eq!(embed_dim % num_heads, 0, "embed_dim must be divisible by num_heads");
+        assert_eq!(
+            embed_dim % num_heads,
+            0,
+            "embed_dim must be divisible by num_heads"
+        );
         let head_dim = embed_dim / num_heads;
-        
+
         Self {
             embed_dim,
             num_heads,
@@ -31,33 +35,33 @@ impl MultiheadAttention {
             out_proj: Linear::new(embed_dim, embed_dim),
         }
     }
-    
+
     pub fn forward_multi(&self, query: &Tensor, key: &Tensor, value: &Tensor) -> Tensor {
         // Simple implementation: Single head equivalent if reshape not supported nicely.
         // Q: (N, L, E) -> (N, L, E)
         let q = self.q_proj.forward(query);
         let k = self.k_proj.forward(key);
         let v = self.v_proj.forward(value);
-        
+
         // Scaled Dot Product
         // scores = Q @ K.T / sqrt(d)
         // K is (N, S, E). K.T should be (N, E, S).
         // RusTorch .t() is only 2D.
         // If N=1 (Batch 1), we can squeeze?
-        
+
         // For MVP: Assume 2D input (L, E) (Batch size = 1 implicit or L=Batch*Seq)
         // But Transformer needs Seq and Batch.
-        
+
         // Let's implement a simplified attention:
         // Assume input is (Batch, Seq, E) but we treat it as (Batch*Seq, E) for Linear?
         // No, Attention needs to mix Seq.
-        
+
         // If we don't have Batched MatMul, we can loop over batch?
         // Or if Batch=1, it's just (Seq, E) @ (E, Seq).
-        
+
         // Let's assume Batch=1 for this demo implementation if shape is 3D.
         // Or if shape is 2D (Seq, E), it works directly.
-        
+
         // Check rank
         let q_shape = q.shape();
         let scores = if q_shape.len() == 2 {
@@ -72,21 +76,21 @@ impl MultiheadAttention {
             let scale = 1.0 / d_k.sqrt();
             // We don't have scalar mul op exposed on Tensor yet?
             // Let's multiply by constant tensor.
-            let scale_t = Tensor::full(raw_scores.shape(), scale); 
+            let scale_t = Tensor::full(raw_scores.shape(), scale);
             raw_scores.mul(&scale_t)
         } else {
-             // 3D case: (Batch, Seq, E)
-             // Fallback: Panic or simplify.
-             // Let's panic for now or treat as 2D if B=1
-             panic!("MultiheadAttention currently supports only 2D inputs (Batch=1 squeezed)");
+            // 3D case: (Batch, Seq, E)
+            // Fallback: Panic or simplify.
+            // Let's panic for now or treat as 2D if B=1
+            panic!("MultiheadAttention currently supports only 2D inputs (Batch=1 squeezed)");
         };
-        
+
         // Softmax
         let attn_weights = scores.softmax(-1); // (Seq, Seq)
-        
+
         // Output = Weights @ V
         let output = attn_weights.matmul(&v); // (Seq, Seq) @ (Seq, E) -> (Seq, E)
-        
+
         self.out_proj.forward(&output)
     }
 }
@@ -140,8 +144,10 @@ impl Module for TransformerEncoderLayer {
         let src2 = self.self_attn.forward(src);
         let src = src.add(&self.dropout1.forward(&src2)); // Use add method instead of + for reference
         let src = self.norm1.forward(&src);
-        
-        let src2 = self.linear2.forward(&self.dropout.forward(&self.linear1.forward(&src).relu()));
+
+        let src2 = self
+            .linear2
+            .forward(&self.dropout.forward(&self.linear1.forward(&src).relu()));
         let src = src.add(&self.dropout2.forward(&src2));
         self.norm2.forward(&src)
     }
@@ -170,7 +176,7 @@ impl Module for TransformerEncoder {
         }
         out
     }
-    
+
     fn parameters(&self) -> Vec<Tensor> {
         self.layers.iter().flat_map(|l| l.parameters()).collect()
     }

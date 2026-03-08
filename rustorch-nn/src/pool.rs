@@ -1,7 +1,7 @@
-use rustorch_core::Tensor;
 use crate::Module;
+use rustorch_core::Tensor;
 #[cfg(feature = "serde")]
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MaxPool2d {
@@ -11,7 +11,11 @@ pub struct MaxPool2d {
 }
 
 impl MaxPool2d {
-    pub fn new(kernel_size: (usize, usize), stride: Option<(usize, usize)>, padding: (usize, usize)) -> Self {
+    pub fn new(
+        kernel_size: (usize, usize),
+        stride: Option<(usize, usize)>,
+        padding: (usize, usize),
+    ) -> Self {
         let stride = stride.unwrap_or(kernel_size);
         Self {
             kernel_size,

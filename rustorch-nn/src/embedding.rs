@@ -1,7 +1,7 @@
-use rustorch_core::Tensor;
 use crate::Module;
+use rustorch_core::Tensor;
 #[cfg(feature = "serde")]
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Embedding {
@@ -18,10 +18,13 @@ pub struct Embedding {
 impl Embedding {
     pub fn new(num_embeddings: usize, embedding_dim: usize) -> Self {
         // Init weight: Standard Normal (0, 1) usually.
-        let weight = Tensor::new(&vec![0.0; num_embeddings * embedding_dim], &[num_embeddings, embedding_dim])
-            .set_requires_grad(true);
+        let weight = Tensor::new(
+            &vec![0.0; num_embeddings * embedding_dim],
+            &[num_embeddings, embedding_dim],
+        )
+        .set_requires_grad(true);
         weight.normal_(0.0, 1.0);
-        
+
         Self {
             num_embeddings,
             embedding_dim,
@@ -44,7 +47,7 @@ impl Module for Embedding {
             self.max_norm,
             self.norm_type,
             self.scale_grad_by_freq,
-            self.sparse
+            self.sparse,
         )
     }
 
