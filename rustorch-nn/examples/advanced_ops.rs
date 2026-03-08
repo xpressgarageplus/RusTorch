@@ -1,7 +1,5 @@
-use std::sync::{Arc, Mutex};
 use rustorch_core::Tensor;
-use rustorch_nn::{Conv2d, MaxPool2d, BatchNorm2d, Linear, ReLU, Module};
-use rustorch_nn::optim::{Optimizer, SGD};
+use rustorch_nn::{MaxPool2d, BatchNorm2d, Module};
 
 fn main() {
     println!("--- Testing MaxPool2d and BatchNorm2d ---");
@@ -35,12 +33,13 @@ fn main() {
     let grad = Tensor::ones(normalized.shape());
     
     println!("Backward pass...");
-    normalized.backward_with_grad(grad);
+    normalized.accumulate_grad(&grad);
+    normalized.backward_step();
     
     println!("Input Grad: {:?}", input.grad().unwrap());
     println!("BN Weight Grad: {:?}", bn.weight.as_ref().unwrap().grad().unwrap());
     
     // Running stats
-    println!("Running Mean: {:?}", bn.running_mean.lock().unwrap());
-    println!("Running Var: {:?}", bn.running_var.lock().unwrap());
+    println!("Running Mean: {:?}", bn.running_mean);
+    println!("Running Var: {:?}", bn.running_var);
 }
