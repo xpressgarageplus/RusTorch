@@ -42,7 +42,7 @@ impl Module for Linear {
         
         if let Some(bias) = &self.bias {
             if output.shape() == bias.shape() {
-                return output + bias;
+                return output + bias.clone();
             } else {
                 // TODO: Implement broadcasting
                 // For now return output

@@ -34,7 +34,7 @@ impl BackwardOp for MSELossBackward {
                 
             let grad_input = Tensor::new_with_storage(Storage::new(grad_input_data), self.input.shape());
             self.input.accumulate_grad(&grad_input);
-            self.input.backward_step();
+    //         self.input.backward_step();
         }
     }
 }
@@ -162,7 +162,7 @@ impl BackwardOp for CrossEntropyLossBackward {
             
             let grad_input = Tensor::new_with_storage(Storage::new(grad_input_data), self.input.shape());
             self.input.accumulate_grad(&grad_input);
-            self.input.backward_step();
+    //         self.input.backward_step();
         }
     }
 }

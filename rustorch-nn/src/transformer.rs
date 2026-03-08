@@ -139,11 +139,11 @@ impl Module for TransformerEncoderLayer {
     fn forward(&self, src: &Tensor) -> Tensor {
         // src: (S, N, E)
         let src2 = self.self_attn.forward(src);
-        let src = src + &self.dropout1.forward(&src2);
+        let src = src.add(&self.dropout1.forward(&src2)); // Use add method instead of + for reference
         let src = self.norm1.forward(&src);
         
         let src2 = self.linear2.forward(&self.dropout.forward(&self.linear1.forward(&src).relu()));
-        let src = src + &self.dropout2.forward(&src2);
+        let src = src.add(&self.dropout2.forward(&src2));
         let src = self.norm2.forward(&src);
         src
     }

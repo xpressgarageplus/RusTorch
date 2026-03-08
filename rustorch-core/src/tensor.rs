@@ -161,7 +161,7 @@ impl Tensor {
         self.backward_step();
     }
 
-    pub(crate) fn backward_step(&self) {
+    pub fn backward_step(&self) {
         // Topological sort is better, but recursive DFS works for DAG.
         // We need to avoid visiting same node multiple times? 
         // PyTorch uses Engine. Here we do simple recursive DFS.
@@ -276,6 +276,31 @@ impl Tensor {
     pub fn is_contiguous(&self) -> bool {
         let default_strides = Self::compute_strides(&self.shape());
         self.strides() == default_strides
+    }
+
+    pub fn normal_(&self, mean: f32, std: f32) {
+        let mut guard = self.data_mut();
+        let mut rng = rand::thread_rng();
+        let normal = Normal::new(mean, std).unwrap();
+        for x in guard.iter_mut() {
+            *x = normal.sample(&mut rng);
+        }
+    }
+
+    pub fn uniform_(&self, low: f32, high: f32) {
+        let mut guard = self.data_mut();
+        let mut rng = rand::thread_rng();
+        let uniform = Uniform::new(low, high);
+        for x in guard.iter_mut() {
+            *x = uniform.sample(&mut rng);
+        }
+    }
+
+    pub fn fill_(&self, value: f32) {
+        let mut guard = self.data_mut();
+        for x in guard.iter_mut() {
+            *x = value;
+        }
     }
 
     pub fn strides(&self) -> &[usize] {

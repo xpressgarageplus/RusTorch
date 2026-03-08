@@ -56,7 +56,6 @@ pub fn kaiming_uniform_(tensor: &Tensor, a: f32, mode: &str, nonlinearity: &str)
     // bound / sqrt(3) = gain / sqrt(fan)
     // bound = sqrt(3) * gain / sqrt(fan)
     let bound = (3.0f32).sqrt() * std;
-    
     tensor.uniform_(-bound, bound);
 }
 
@@ -81,7 +80,6 @@ pub fn xavier_uniform_(tensor: &Tensor, gain: f32) {
 pub fn xavier_normal_(tensor: &Tensor, gain: f32) {
     let (fan_in, fan_out) = calculate_fan_in_and_fan_out(tensor);
     let std = gain * (2.0 / (fan_in as f32 + fan_out as f32)).sqrt();
-    
     tensor.normal_(0.0, std);
 }
 
@@ -102,8 +100,10 @@ pub fn constant_(tensor: &Tensor, val: f32) {
 
 pub fn uniform_(tensor: &Tensor, low: f32, high: f32) {
     tensor.uniform_(low, high);
+
 }
 
 pub fn normal_(tensor: &Tensor, mean: f32, std: f32) {
     tensor.normal_(mean, std);
+
 }
