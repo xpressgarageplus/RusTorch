@@ -51,8 +51,8 @@ impl BackwardOp for SigmoidBackward {
             // grad_input = grad * sigmoid(input) * (1 - sigmoid(input))
             let s = sigmoid(&self.input);
             let one = Tensor::ones(s.shape());
-            let ds = s.mul(&one.sub(&s));
-            let grad_input = grad.mul(&ds);
+            let ds = crate::ops::mul(&s, &crate::ops::sub(&one, &s));
+            let grad_input = crate::ops::mul(grad, &ds);
             
             self.input.accumulate_grad(&grad_input);
             self.input.backward_step();
@@ -93,8 +93,9 @@ impl BackwardOp for TanhBackward {
             // grad_input = grad * (1 - tanh(x)^2)
             let t = tanh(&self.input);
             let one = Tensor::ones(t.shape());
-            let dt = one.sub(&t.mul(&t));
-            let grad_input = grad.mul(&dt);
+            let t2 = crate::ops::mul(&t, &t);
+            let dt = crate::ops::sub(&one, &t2);
+            let grad_input = crate::ops::mul(grad, &dt);
             
             self.input.accumulate_grad(&grad_input);
             self.input.backward_step();

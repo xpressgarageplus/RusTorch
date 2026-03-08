@@ -127,7 +127,7 @@ pub fn permute(input: &Tensor, dims: &[usize]) -> Tensor {
                 strides: tensor.strides().to_vec(),
                 grad: Mutex::new(None),
                 requires_grad: true,
-                op: Some(op),
+                op: Some(op as Arc<dyn BackwardOp>),
                 is_leaf: false,
             }),
         };

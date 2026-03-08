@@ -46,12 +46,12 @@ impl BackwardOp for MulBackward {
             // But we need to be careful about infinite recursion if not careful.
             // Here it's fine.
             
-            let grad_lhs = grad.mul(&self.rhs); 
+            let grad_lhs = crate::ops::mul(grad, &self.rhs); 
             self.lhs.accumulate_grad(&grad_lhs);
             self.lhs.backward_step();
         }
         if self.rhs.requires_grad() {
-            let grad_rhs = grad.mul(&self.lhs);
+            let grad_rhs = crate::ops::mul(grad, &self.lhs);
             self.rhs.accumulate_grad(&grad_rhs);
             self.rhs.backward_step();
         }
