@@ -99,22 +99,14 @@ pub struct AddBackward {
 impl BackwardOp for AddBackward {
     fn backward(&self, grad: &Tensor) {
         if self.lhs.requires_grad() {
-            let grad_lhs = if grad.shape() != self.lhs.shape() {
-                // Simplified sum_to_shape (placeholder)
-                // For now, assume broadcast happened and we need to reduce.
-                grad.clone() 
-            } else {
-                grad.clone()
-            };
+            // TODO: Sum to shape if broadcasted
+            let grad_lhs = grad.clone();
             self.lhs.accumulate_grad(&grad_lhs);
             self.lhs.backward_step();
         }
         if self.rhs.requires_grad() {
-            let grad_rhs = if grad.shape() != self.rhs.shape() {
-                grad.clone()
-            } else {
-                grad.clone()
-            };
+            // TODO: Sum to shape if broadcasted
+            let grad_rhs = grad.clone();
             self.rhs.accumulate_grad(&grad_rhs);
             self.rhs.backward_step();
         }

@@ -17,6 +17,7 @@ enum StorageImpl {
     #[cfg(feature = "cuda")]
     Cuda(Arc<CudaSlice<f32>>),
     #[cfg(not(feature = "cuda"))]
+    #[allow(dead_code)]
     CudaStub,
 }
 
@@ -50,21 +51,21 @@ impl Storage {
         Self::new(vec![0.0; size])
     }
     
-    pub fn data(&self) -> RwLockReadGuard<Vec<f32>> {
+    pub fn data(&self) -> RwLockReadGuard<'_, Vec<f32>> {
         match &self.inner {
             StorageImpl::Cpu(data) => data.read().expect("Lock poisoned"),
             _ => panic!("data() accessor only supported on CPU tensors. Use to_device() to move to CPU first."),
         }
     }
 
-    pub fn data_mut(&self) -> RwLockWriteGuard<Vec<f32>> {
+    pub fn data_mut(&self) -> RwLockWriteGuard<'_, Vec<f32>> {
         match &self.inner {
             StorageImpl::Cpu(data) => data.write().expect("Lock poisoned"),
             _ => panic!("data_mut() accessor only supported on CPU tensors."),
         }
     }
 
-    pub fn as_slice(&self) -> RwLockReadGuard<Vec<f32>> {
+    pub fn as_slice(&self) -> RwLockReadGuard<'_, Vec<f32>> {
         self.data()
     }
 
@@ -74,8 +75,13 @@ impl Storage {
             #[cfg(feature = "cuda")]
             StorageImpl::Cuda(data) => data.len(),
             #[cfg(not(feature = "cuda"))]
+            #[allow(unused_variables)]
             StorageImpl::CudaStub => 0,
         }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
     }
     
     pub fn device(&self) -> Device {
@@ -88,7 +94,7 @@ impl Storage {
         }
         
         match (self.device, device) {
-            (Device::Cpu, Device::Cuda(id)) => {
+            (Device::Cpu, Device::Cuda(_id)) => {
                 // Implement CPU -> CUDA transfer
                 #[cfg(feature = "cuda")]
                 {

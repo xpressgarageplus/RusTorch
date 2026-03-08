@@ -43,15 +43,15 @@ impl Tensor {
         // Precompute strides for index calculation
         let mut new_strides = vec![0; new_shape.len()];
         let mut stride = 1;
-        for i in (0..new_shape.len()).rev() {
-            new_strides[i] = stride;
+        for (i, val) in new_strides.iter_mut().enumerate().rev() {
+            *val = stride;
             stride *= new_shape[i];
         }
         
         let mut old_strides = vec![0; current_shape.len()];
         let mut stride = 1;
-        for i in (0..current_shape.len()).rev() {
-            old_strides[i] = stride;
+        for (i, val) in old_strides.iter_mut().enumerate().rev() {
+            *val = stride;
             stride *= current_shape[i];
         }
         
@@ -64,9 +64,9 @@ impl Tensor {
             let mut temp_i = i;
             let mut old_idx = 0;
             
-            for dim in 0..new_shape.len() {
-                let coord = temp_i / new_strides[dim];
-                temp_i %= new_strides[dim];
+            for (dim, stride) in new_strides.iter().enumerate().take(new_shape.len()) {
+                let coord = temp_i / stride;
+                temp_i %= stride;
                 
                 // Map coord to old coord
                 if dim >= offset {

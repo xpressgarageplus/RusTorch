@@ -95,7 +95,7 @@ pub fn permute(input: &Tensor, dims: &[usize]) -> Tensor {
     };
     
     if inner.requires_grad {
-        let mut t = tensor.clone(); // Mutable clone wrapper
+        let _t = tensor.clone(); // Mutable clone wrapper
         // Actually we need to set op on `tensor`.
         // But `Tensor` struct has `inner` which is `Arc`.
         // We just created it, so we can modify it if we had mut access.
@@ -174,10 +174,10 @@ pub fn contiguous(input: &Tensor) -> Tensor {
     // We need to convert logical index to physical offset.
     // logical_to_physical(index, shape, strides)
     
-    for i in 0..size {
-        let mut idx = i;
+    for (i, val) in data.iter_mut().enumerate().take(size) {
+        let _idx = i;
         let mut physical_offset = 0;
-        let mut shape_mul = size;
+        let _shape_mul = size;
         
         // Decompose linear index i into coords
         // shape: [d0, d1, d2]
@@ -198,7 +198,7 @@ pub fn contiguous(input: &Tensor) -> Tensor {
             physical_offset += coord * strides[dim_idx];
         }
         
-        data[i] = input_storage[physical_offset];
+        *val = input_storage[physical_offset];
     }
     
     let storage = Storage::new(data);

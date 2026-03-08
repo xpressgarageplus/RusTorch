@@ -1,4 +1,3 @@
-use std::sync::{Arc, Mutex};
 use crate::Tensor;
 
 pub trait BackwardOp: std::fmt::Debug + Send + Sync {

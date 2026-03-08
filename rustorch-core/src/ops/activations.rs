@@ -117,7 +117,7 @@ pub fn softmax(input: &Tensor, dim: i64) -> Tensor {
     
     let shape = input.shape();
     let last_dim_size = shape[shape.len() - 1];
-    let outer_size: usize = shape.iter().take(shape.len() - 1).product();
+    let _outer_size: usize = shape.iter().take(shape.len() - 1).product();
     
     let input_guard = input.data();
     let input_data = &*input_guard;

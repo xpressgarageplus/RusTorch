@@ -1,4 +1,3 @@
-use std::sync::{Arc, Mutex};
 use rayon::prelude::*;
 use crate::Tensor;
 use crate::autograd::BackwardOp;
@@ -28,7 +27,7 @@ impl BackwardOp for BatchNorm2dBackwardFull {
             let c = self.input.shape()[1];
             let h = self.input.shape()[2];
             let w = self.input.shape()[3];
-            let num_pixels = (h * w) as f32;
+            let _num_pixels = (h * w) as f32;
             let m = (n * h * w) as f32;
             
             let grad_guard = grad.data();
@@ -139,6 +138,7 @@ impl BackwardOp for BatchNorm2dBackwardFull {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn batch_norm2d(
     input: &Tensor,
     gamma: Option<&Tensor>,
@@ -216,7 +216,7 @@ pub fn batch_norm2d(
     let inv_std: Vec<f32> = var.iter().map(|v| 1.0 / (v + eps).sqrt()).collect();
     
     output_data.par_chunks_mut(h * w).enumerate().for_each(|(i, plane)| {
-        let ci = (i / n) % c; // Wait, chunk is H*W? No.
+        let _ci = (i / n) % c; // Wait, chunk is H*W? No.
         // Index mapping:
         // i goes from 0 to N*C-1.
         // idx = i * (H*W)
@@ -228,12 +228,12 @@ pub fn batch_norm2d(
         let ci = i % c;
         // let b = i / c;
         
-        let m = mean[ci];
-        let inv_s = inv_std[ci];
-        let g = if let Some(gd) = &gamma_data { gd[ci] } else { 1.0 };
-        let b_val = if let Some(bd) = &beta_data { bd[ci] } else { 0.0 };
+        let _m = mean[ci];
+        let _inv_s = inv_std[ci];
+        let _g = if let Some(gd) = &gamma_data { gd[ci] } else { 1.0 };
+        let _b_val = if let Some(bd) = &beta_data { bd[ci] } else { 0.0 };
         
-        for x in plane.iter_mut() { // plane is pre-filled with 0.0, we need to read input
+        for _x in plane.iter_mut() { // plane is pre-filled with 0.0, we need to read input
              // Oops, we don't have input slice here easily unless we zip or calculate index.
              // Let's iterate index.
         }
@@ -257,7 +257,7 @@ pub fn batch_norm2d(
     let storage = Storage::new(output_data);
     let mut tensor = Tensor::new_with_storage(storage, shape);
     
-    if training && (input.requires_grad() || gamma.map_or(false, |g| g.requires_grad()) || beta.map_or(false, |b| b.requires_grad())) {
+    if training && (input.requires_grad() || gamma.map_or(false, |g| g.requires_grad()) || beta.is_some_and(|b| b.requires_grad())) {
         tensor.set_requires_grad_mut(true);
         // Need to pass mean/inv_std to backward
         // But mean/inv_std are Vec<f32>.
@@ -267,8 +267,8 @@ pub fn batch_norm2d(
         
         tensor.set_op(Arc::new(BatchNorm2dBackwardFull {
             input: input.clone(),
-            gamma: gamma.map(|g| g.clone()),
-            beta: beta.map(|b| b.clone()),
+            gamma: gamma.cloned(),
+            beta: beta.cloned(),
             mean,
             inv_std,
             eps,
@@ -490,7 +490,7 @@ pub fn layer_norm(
     let storage = Storage::new(output_data);
     let mut tensor = Tensor::new_with_storage(storage, shape);
     
-    if input.requires_grad() || weight.map_or(false, |w| w.requires_grad()) || bias.map_or(false, |b| b.requires_grad()) {
+    if input.requires_grad() || weight.map_or(false, |w| w.requires_grad()) || bias.is_some_and(|b| b.requires_grad()) {
         tensor.set_requires_grad_mut(true);
         // Store mean/inv_std for backward
         // They are (OuterDim). We can store as (OuterDim) tensor.
@@ -499,8 +499,8 @@ pub fn layer_norm(
         
         tensor.set_op(Arc::new(LayerNormBackward {
             input: input.clone(),
-            weight: weight.map(|w| w.clone()),
-            bias: bias.map(|b| b.clone()),
+            weight: weight.cloned(),
+            bias: bias.cloned(),
             mean: mean_tensor,
             inv_std: inv_std_tensor,
             normalized_shape: normalized_shape.to_vec(),

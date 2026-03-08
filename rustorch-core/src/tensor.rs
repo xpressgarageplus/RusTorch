@@ -1,11 +1,11 @@
 use std::sync::{Arc, Mutex, RwLockReadGuard, RwLockWriteGuard};
 use std::fmt;
-use std::ops::{Add, Mul, Sub, Div};
+use std::ops::{Add, Mul, Sub};
 use rand::Rng;
-use rand_distr::{Distribution, Normal, Uniform};
-use rayon::prelude::*;
-use rayon::iter::{IntoParallelRefIterator, ParallelIterator, IndexedParallelIterator};
-use rayon::slice::ParallelSliceMut;
+use rand_distr::{Normal, Uniform};
+// use rayon::prelude::*;
+// use rayon::iter::{IntoParallelRefIterator, ParallelIterator, IndexedParallelIterator};
+// use rayon::slice::ParallelSliceMut;
 #[cfg(feature = "serde")]
 use serde::{Serialize, Deserialize, Serializer, Deserializer};
 use crate::storage::Storage;
@@ -119,11 +119,11 @@ impl Tensor {
         &self.inner.shape
     }
 
-    pub fn data(&self) -> RwLockReadGuard<Vec<f32>> {
+    pub fn data(&self) -> RwLockReadGuard<'_, Vec<f32>> {
         self.inner.storage.data()
     }
 
-    pub fn data_mut(&self) -> RwLockWriteGuard<Vec<f32>> {
+    pub fn data_mut(&self) -> RwLockWriteGuard<'_, Vec<f32>> {
         self.inner.storage.data_mut()
     }
     
@@ -189,7 +189,7 @@ impl Tensor {
         }
     }
 
-    pub fn matmul(&self, rhs: &Tensor) -> Tensor {
+    pub fn matmul(&self, _rhs: &Tensor) -> Tensor {
         // crate::ops::matmul(self, rhs)
         // Temporary placeholder or fix path
         // Assume matmul is not yet exported or needs qualified path
@@ -238,6 +238,7 @@ impl Tensor {
         crate::ops::max_pool2d(self, kernel_size, stride, padding)
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn batch_norm2d(
         &self,
         gamma: Option<&Tensor>,
@@ -274,7 +275,7 @@ impl Tensor {
     }
 
     pub fn is_contiguous(&self) -> bool {
-        let default_strides = Self::compute_strides(&self.shape());
+        let default_strides = Self::compute_strides(self.shape());
         self.strides() == default_strides
     }
 
@@ -376,21 +377,21 @@ impl Add for &Tensor {
 impl Add<Tensor> for Tensor {
     type Output = Tensor;
     fn add(self, rhs: Tensor) -> Tensor {
-        (&self).add(&rhs)
+        Tensor::add(&self, &rhs)
     }
 }
 
 impl Sub<Tensor> for Tensor {
     type Output = Tensor;
     fn sub(self, rhs: Tensor) -> Tensor {
-        (&self).sub(&rhs)
+        Tensor::sub(&self, &rhs)
     }
 }
 
 impl Mul<Tensor> for Tensor {
     type Output = Tensor;
     fn mul(self, rhs: Tensor) -> Tensor {
-        (&self).mul(&rhs)
+        Tensor::mul(&self, &rhs)
     }
 }
 

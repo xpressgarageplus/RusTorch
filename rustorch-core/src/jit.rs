@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use crate::Tensor;
-use crate::ops;
 
 // --- IR Definition ---
 
@@ -34,6 +33,12 @@ pub struct Graph {
     pub nodes: Vec<Node>,
     pub inputs: Vec<usize>,
     pub outputs: Vec<usize>,
+}
+
+impl Default for Graph {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Graph {

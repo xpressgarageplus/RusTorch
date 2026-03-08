@@ -55,13 +55,13 @@ impl BackwardOp for Conv2dBackward {
                  let mut sum = 0.0;
                  
                  // h_out range
-                 let h_out_start = if h + pad_h >= k_h { (h + pad_h - k_h + 1 + stride_h - 1) / stride_h } else { 0 };
+                 let h_out_start = if h + pad_h >= k_h { (h + pad_h - k_h + 1).div_ceil(stride_h) } else { 0 };
                  let h_out_end = std::cmp::min(h_out, (h + pad_h) / stride_h + 1);
                  
                  for ho in h_out_start..h_out_end {
                      let kh = h + pad_h - ho * stride_h;
                      
-                     let w_out_start = if w + pad_w >= k_w { (w + pad_w - k_w + 1 + stride_w - 1) / stride_w } else { 0 };
+                     let w_out_start = if w + pad_w >= k_w { (w + pad_w - k_w + 1).div_ceil(stride_w) } else { 0 };
                      let w_out_end = std::cmp::min(w_out, (w + pad_w) / stride_w + 1);
 
                      for wo in w_out_start..w_out_end {
