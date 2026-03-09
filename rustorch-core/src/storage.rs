@@ -124,11 +124,6 @@ impl Storage {
             #[cfg(feature = "vulkan_backend")]
             StorageImpl::Vulkan(buf) => buf.len() as usize,
         }
-    }#[cfg(feature = "wgpu_backend")]
-            StorageImpl::Wgpu(_, size) => *size,
-            #[cfg(feature = "vulkan_backend")]
-            StorageImpl::Vulkan(buf) => buf.len() as usize,
-        }
     }
 
     pub fn is_empty(&self) -> bool {
