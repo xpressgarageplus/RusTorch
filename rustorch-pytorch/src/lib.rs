@@ -31,13 +31,13 @@ impl PyTorchAdapter {
             // For now, we only support f32 in RusTorch
             let float_tensor = cpu_tensor.to_kind(Kind::Float);
             let numel = float_tensor.numel();
-            let mut data = vec![0.0f32; numel as usize];
-            float_tensor.copy_data(&mut data, numel as usize);
+            let mut data = vec![0.0f32; numel];
+            float_tensor.copy_data(&mut data, numel);
             Ok(Tensor::new(&data, &size))
         } else {
             let numel = cpu_tensor.numel();
-            let mut data = vec![0.0f32; numel as usize];
-            cpu_tensor.copy_data(&mut data, numel as usize);
+            let mut data = vec![0.0f32; numel];
+            cpu_tensor.copy_data(&mut data, numel);
             Ok(Tensor::new(&data, &size))
         }
     }
