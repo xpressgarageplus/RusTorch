@@ -1,0 +1,12 @@
+[package]
+name = "rustorch-wgpu"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rustorch-core = { path = "../rustorch-core", features = ["wgpu_backend"] }
+wgpu = "0.19"
+pollster = "0.3"
+bytemuck = { version = "1.14", features = ["derive"] }
+anyhow = "1.0"
+log = "0.4"

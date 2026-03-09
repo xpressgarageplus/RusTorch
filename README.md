@@ -31,6 +31,59 @@ RusTorch is a modular workspace designed for scalability:
 *   **`rustorch-text`**: NLP primitives, Tokenizers, and Vocab.
 *   **`rustorch-cuda`**: High-performance CUDA kernels.
 *   **`rustorch-wasm`**: Run your models directly in the browser.
+*   **`rustorch-pytorch`**: 🌉 **NEW!** Bridge to PyTorch ecosystem. Load `.pth` files and interop with LibTorch.
+*   **`rustorch-wgpu`**: 🌐 **NEW!** WebGPU backend for browser and cross-platform GPU acceleration.
+*   **`rustorch-vulkan`**: 🎮 **NEW!** Vulkan compute backend for high-performance graphics hardware.
+
+---
+
+## 🌐 Universal Architecture
+
+RusTorch isn't just a library; it's a universal tensor compiler.
+
+```mermaid
+graph TD
+    User[User Application] --> API[RusTorch API]
+    API --> Core[rustorch-core]
+    
+    subgraph "Compute Backends"
+        Core --> CPU[Rayon CPU]
+        Core --> CUDA[CUDA (NVidia)]
+        Core --> WGPU[WebGPU (Browser/Cross-Platform)]
+        Core --> Vulkan[Vulkan (High-Performance Graphics)]
+    end
+    
+    subgraph "Interoperability"
+        PyTorch[PyTorch Ecosystem] <-->|rustorch-pytorch| Core
+        Model[.pth Models] <-->|Load/Save| Core
+    end
+```
+
+### 🌉 PyTorch Bridge (`rustorch-pytorch`)
+
+Seamlessly switch between RusTorch and PyTorch. No more rewriting models from scratch.
+
+*   **🔄 Zero-Copy Conversion**: Convert `rustorch::Tensor` <-> `torch::Tensor` instantly.
+*   **💾 Model Loading**: Load pre-trained `.pth` weights directly into RusTorch models.
+*   **🛡️ Operator Fallback**: Use PyTorch's battle-tested operators when RusTorch implementation is missing.
+
+```rust
+use rustorch_pytorch::PyTorchAdapter;
+
+// Load a PyTorch model checkpoint
+let weights = PyTorchAdapter::load_state_dict("resnet18.pth")?;
+
+// Run inference in RusTorch
+let input = Tensor::randn(&[1, 3, 224, 224]);
+// let output = model.forward(&input);
+```
+
+### 🎮 Graphics-Ready Compute (`rustorch-wgpu` & `rustorch-vulkan`)
+
+Unlock the power of your GPU, anywhere.
+
+*   **WebGPU Backend**: Run large language models directly in the browser with near-native performance.
+*   **Vulkan Backend**: Cross-vendor GPU support (AMD, Intel, NVIDIA, Mobile) with low-level control.
 
 ---
 

@@ -3,12 +3,18 @@ use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 #[cfg(feature = "cuda")]
 use cudarc::driver::CudaSlice;
+#[cfg(feature = "wgpu_backend")]
+use wgpu;
+#[cfg(feature = "vulkan_backend")]
+use vulkano::buffer::Subbuffer;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Device {
     Cpu,
     Cuda(usize),
     Metal(usize),
+    Wgpu(usize),
+    Vulkan(usize),
 }
 
 #[derive(Clone)]
@@ -19,6 +25,10 @@ enum StorageImpl {
     #[cfg(not(feature = "cuda"))]
     #[allow(dead_code)]
     CudaStub,
+    #[cfg(feature = "wgpu_backend")]
+    Wgpu(Arc<wgpu::Buffer>, usize), // Buffer and element count
+    #[cfg(feature = "vulkan_backend")]
+    Vulkan(Arc<Subbuffer<[f32]>>),
 }
 
 #[derive(Clone)]
@@ -40,6 +50,38 @@ impl Storage {
         Self {
             inner: StorageImpl::Cuda(Arc::new(data)),
             device: Device::Cuda(device_id),
+        }
+    }
+
+    #[cfg(feature = "wgpu_backend")]
+    pub fn new_wgpu(buffer: Arc<wgpu::Buffer>, size: usize, device_id: usize) -> Self {
+        Self {
+            inner: StorageImpl::Wgpu(buffer, size),
+            device: Device::Wgpu(device_id),
+        }
+    }
+
+    #[cfg(feature = "vulkan_backend")]
+    pub fn new_vulkan(buffer: Arc<Subbuffer<[f32]>>, device_id: usize) -> Self {
+        Self {
+            inner: StorageImpl::Vulkan(buffer),
+            device: Device::Vulkan(device_id),
+        }
+    }
+
+    #[cfg(feature = "wgpu_backend")]
+    pub fn wgpu_buffer(&self) -> Option<&wgpu::Buffer> {
+        match &self.inner {
+            StorageImpl::Wgpu(buffer, _) => Some(buffer),
+            _ => None,
+        }
+    }
+
+    #[cfg(feature = "vulkan_backend")]
+    pub fn vulkan_buffer(&self) -> Option<&Subbuffer<[f32]>> {
+        match &self.inner {
+            StorageImpl::Vulkan(buffer) => Some(buffer),
+            _ => None,
         }
     }
 
@@ -77,6 +119,10 @@ impl Storage {
             #[cfg(not(feature = "cuda"))]
             #[allow(unused_variables)]
             StorageImpl::CudaStub => 0,
+            #[cfg(feature = "wgpu_backend")]
+            StorageImpl::Wgpu(_, size) => *size,
+            #[cfg(feature = "vulkan_backend")]
+            StorageImpl::Vulkan(buf) => buf.len() as usize,
         }
     }
 

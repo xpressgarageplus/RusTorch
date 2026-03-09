@@ -93,6 +93,18 @@ impl Tensor {
         Self::new(&vec![1.0; size], shape)
     }
 
+    pub fn storage(&self) -> &Storage {
+        &self.inner.storage
+    }
+
+    pub fn shape(&self) -> &[usize] {
+        &self.inner.shape
+    }
+
+    pub fn strides(&self) -> &[usize] {
+        &self.inner.strides
+    }
+
     pub fn set_requires_grad(self, requires_grad: bool) -> Self {
         let inner = &self.inner;
         let new_impl = TensorImpl {
