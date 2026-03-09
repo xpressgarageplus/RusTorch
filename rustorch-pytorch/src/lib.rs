@@ -122,7 +122,9 @@ mod tests {
         // Convert to PyTorch
         let torch_tensor = PyTorchAdapter::to_torch(&rt_tensor);
         assert_eq!(torch_tensor.size(), vec![2, 2]);
-        let data_vec: Vec<f32> = torch_tensor.shallow_clone().into();
+        let numel = torch_tensor.numel();
+        let mut data_vec = vec![0.0f32; numel as usize];
+        torch_tensor.copy_data(&mut data_vec, numel as usize);
         assert_eq!(data_vec, data);
 
         // Convert back
