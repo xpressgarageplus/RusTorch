@@ -25,6 +25,8 @@ jobs:
         unzip libtorch.zip
         echo "LIBTORCH=$(pwd)/libtorch" >> $GITHUB_ENV
         echo "LD_LIBRARY_PATH=$(pwd)/libtorch/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+    - name: Install PyTorch CPU wheel
+      run: python -m pip install --upgrade pip && python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
 
     - name: Build
       run: cargo build --verbose --workspace
@@ -50,7 +52,16 @@ jobs:
       run: |
         cargo run --release -p demo_visual --bin demo_visual > demo.log 2>&1 &
         echo $! > demo.pid
-        sleep 45
+        for i in $(seq 1 120); do
+          if curl -fsS http://127.0.0.1:3003/promo_status >/dev/null 2>&1; then
+            echo "demo is ready"
+            exit 0
+          fi
+          sleep 2
+        done
+        echo "demo failed to become ready in time"
+        tail -n 200 demo.log || true
+        exit 1
     - name: Check demo endpoints
       run: |
         curl -fsS http://127.0.0.1:3003/ > /tmp/demo.html
