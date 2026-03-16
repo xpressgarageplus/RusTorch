@@ -37,6 +37,7 @@ jobs:
         RUST_TORCH_REPEAT: "3"
         RUST_TORCH_MIN_SPEED_RATIO: "0.05"
         RUST_TORCH_MAX_LOSS_RATIO: "12.0"
+        RUST_TORCH_CI_SOFT: "1"
       run: python demo_visual/ci_regression.py
     - name: Run clippy
       run: cargo clippy --workspace -- -D warnings

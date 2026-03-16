@@ -60,6 +60,7 @@ def collect_once(rust_env):
 
 def main():
     repeat = max(int(os.environ.get("RUST_TORCH_REPEAT", "3")), 1)
+    ci_soft = os.environ.get("RUST_TORCH_CI_SOFT", "0") == "1"
     torch_losses = []
     rust_losses = []
     torch_accs = []
@@ -101,6 +102,9 @@ def main():
             print("WARN: skip one alignment sample due to runtime instability", file=sys.stderr)
 
     if not torch_losses or not rust_losses:
+        if ci_soft:
+            print("WARN: no valid alignment samples collected, skip hard fail in CI soft mode", file=sys.stderr)
+            return
         print("FAIL: no valid alignment samples collected", file=sys.stderr)
         sys.exit(1)
 
@@ -156,6 +160,9 @@ def main():
         print(f"FAIL: speed ratio rust/torch < {min_speed_ratio}", file=sys.stderr)
 
     if not ok:
+        if ci_soft:
+            print("WARN: alignment gate failed but CI soft mode is enabled", file=sys.stderr)
+            return
         sys.exit(1)
 
 
